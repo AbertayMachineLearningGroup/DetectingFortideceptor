@@ -1,65 +1,70 @@
-#Detecting Fortideceptor
-FortiDeceptor_Detection
+# FortiDeceptor Decoy Detection Script
 
-Detecting FortiDeceptor decoys or any advanced deception technology in a network is challenging because these solutions are explicitly designed to blend in with legitimate systems. However, there are certain techniques attackers and red teamers may use to identify decoys, which can also help defenders validate their deployment.
+This Python script automates the detection of FortiDeceptor decoys and other deceptive systems within a network. It utilizes various techniques such as network scanning, ARP scanning, banner grabbing, system uptime checks, and virtualization detection to identify potential decoys.
 
-1. Network-Based Detection Techniques
-Latency Analysis: Deception systems often have higher response times due to their monitoring layer. Measuring network latency for specific services (like SMB, RDP) can sometimes reveal decoys.
+## Features
+- **Network Scanning**: Scans all open ports on a target IP using Nmap.
+- **ARP Scanning**: Identifies unusual MAC addresses within the local network.
+- **Banner Grabbing**: Collects service banners to detect anomalies.
+- **System Uptime Check**: Checks the uptime of remote systems to identify freshly deployed decoys.
+- **Virtualization Detection**: Detects virtualization artifacts to reveal decoy systems.
 
-Unusual Open Ports: FortiDeceptor may configure decoys with standard and non-standard ports. Scanning for unusual combinations using Nmap or Masscan might reveal decoys.
+## Prerequisites
+Ensure the following tools are installed on your system:
 
-bash
-Copy
-Edit
-nmap -sS -p- -T4 <target-ip>
-Banner Grabbing: Check service banners for inconsistencies or default configurations.
+- Python 3.x
+- Nmap
+- arp-scan
+- netcat (nc)
+- dmidecode
+- smbclient (optional for uptime checks)
 
-bash
-Copy
-Edit
-nc <target-ip> <port>
-ARP and MAC Address Anomalies: Decoys may have MAC addresses that don't match typical vendor ranges. Use arp-scan:
+Install required dependencies on Debian/Ubuntu:
+```bash
+sudo apt-get install nmap arp-scan netcat dmidecode smbclient
+```
 
-bash
-Copy
-Edit
-sudo arp-scan --localnet
-2. System-Based Detection
-Service Enumeration: Decoys often lack depth in service configurations. For example, an RDP decoy might allow connections but lack real user data.
+## Usage
+Run the script with root privileges for ARP scanning:
 
-Check for Default Credentials: Some decoys use easy-to-guess credentials.
-Examine File Systems: Decoys might have minimal file structures or dummy files.
-System Uptime: Newly deployed decoys often have low uptime. You can check this using:
+```bash
+sudo python3 fortideceptor_detector.py <target-ip>
+```
 
-bash
-Copy
-Edit
-net stats workstation
-Virtualization Artifacts: Decoys often run in virtual environments. Look for:
+Replace `<target-ip>` with the IP address of the system you want to scan.
 
-Virtual NICs.
-Specific drivers or processes related to virtualization.
-Using PowerShell:
+## Code Overview
 
-powershell
-Copy
-Edit
-Get-WmiObject Win32_ComputerSystem | Select-Object Manufacturer, Model
-3. Behavioral Analysis
-Noisy Interactions: FortiDeceptor decoys typically log all activity. If simple actions (e.g., port scans) result in immediate network alerts or blocks, it could indicate decoys are present.
+```python
+def run_nmap_scan(target_ip):
+    """Runs Nmap scan on the target IP."""
+    subprocess.run(["nmap", "-sS", "-p-", "-T4", target_ip], capture_output=True, text=True)
 
-Outbound Traffic: Monitor decoy interactions for unusual outbound connections to FortiDeceptor management consoles or SIEM solutions.
+def run_arp_scan():
+    """Performs ARP scan on the local network."""
+    subprocess.run(["sudo", "arp-scan", "--localnet"], capture_output=True, text=True)
 
-bash
-Copy
-Edit
-tcpdump -i any host <decoy-ip>
-4. FortiDeceptor-Specific Clues
-While FortiDeceptor tries to avoid leaving signatures, some clues might help:
+def banner_grab(target_ip, port):
+    """Grabs service banner from the specified port."""
+    subprocess.run(["nc", "-v", "-n", target_ip, str(port)], capture_output=True, text=True, timeout=5)
 
-Agent-Based Footprints: Check for processes or services tied to Fortinet products.
-Decoy Breadth: FortiDeceptor often deploys decoys across various layers (network, endpoint, application). A network with too many "too-perfect" systems could suggest decoys.
-5. Defensive Tips
-Regularly rotate decoys and vary their configurations.
-Use threat intelligence to monitor for known decoy-detection tools.
-Employ deception alongside active defenses like EDR and NDR for layered security.
+def check_uptime(target_ip):
+    """Checks system uptime using SMB."""
+    subprocess.run(["smbclient", "-L", target_ip, "-N"], capture_output=True, text=True)
+
+def detect_virtualization():
+    """Detects virtualization artifacts."""
+    subprocess.run(["dmidecode", "-s", "system-manufacturer"], capture_output=True, text=True)
+```
+
+## Example
+
+```bash
+sudo python3 fortideceptor_detector.py 192.168.1.100
+```
+
+## Disclaimer
+This script is intended for educational and security testing purposes only. Unauthorized use against systems you do not own or have explicit permission to test is illegal.
+
+## License
+This project is licensed under the MIT License.
