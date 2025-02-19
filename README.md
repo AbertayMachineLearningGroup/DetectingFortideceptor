@@ -63,7 +63,7 @@ def detect_virtualization():
 sudo python3 fortideceptor_detector.py 192.168.1.100
 ```
 
-![FortiDeceptor Detection]([./decoy_detection.png)](https://github.com/AbertayMachineLearningGroup/DetectingFortideceptor/blob/main/Screenshot%202025-02-19%20at%2015.41.07.png)
+![FortiDeceptor Detection](https://github.com/AbertayMachineLearningGroup/DetectingFortideceptor/blob/main/Screenshot%202025-02-19%20at%2015.41.07.png)
 
 
 ## Disclaimer
